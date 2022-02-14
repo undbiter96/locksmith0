@@ -245,6 +245,8 @@ and rho = {
 
   rho_label_name : LN.label_name;
   (** special struct used to print better error messages *)
+
+  rho_priority_value : int;
 }
 
 module Rho : Lockutil.HashedOrderedType with type t = rho =
@@ -487,10 +489,34 @@ let make_rho (n: LN.label_name) (concrete: bool) : rho =
   let r = {
     rho_cfl_node = make_node "" concrete true;
     rho_label_name = n;
+    rho_priority_value = 0;
   } in
   if concrete then all_concrete_rho := RhoSet.add r !all_concrete_rho;
   NodeHT.add all_rho r.rho_cfl_node r;
   r
+
+(* creates a new rho with the change applied and returns it *)
+let update_rho_priority_value (r: rho) (change: int) : unit = begin
+  (* check if rho is concrete *)
+  if (RhoSet.mem r !all_concrete_rho) then begin
+    (* From version 4.01 onwards, just use RhoSet.find *)
+    let (tmp, _) = RhoSet.partition (fun x -> if Rho.equal x r then true else false) !all_concrete_rho in
+    let rh = RhoSet.min_elt tmp in
+    let rn = {
+      rho_cfl_node = rh.rho_cfl_node;
+      rho_label_name = rh.rho_label_name;
+      rho_priority_value = rh.rho_priority_value + change;
+    } in
+    (*ignore(E.log "%a%s\n" LN.d_label_name rn.rho_label_name
+      (if !debug then (CFL.dotstring_of_node rn.rho_cfl_node)
+      else (CFL.string_of_node rn.rho_cfl_node)));
+    ignore(E.log "Value = %d\n" (rn.rho_priority_value));*)
+    all_concrete_rho := RhoSet.remove rh !all_concrete_rho;
+    all_concrete_rho := RhoSet.add rn !all_concrete_rho;
+  end
+end
+
+let get_rho_priority_value (r: rho) : int = r.rho_priority_value
 
 let update_rho_location rho loc =
   ignore (CFL.update_node_location rho.rho_cfl_node loc); rho
@@ -1133,6 +1159,9 @@ let concrete_rho_iter (f: rho -> unit) : unit =
 
 let concrete_lock_iter (f: lock -> unit) : unit =
   LockSet.iter f !all_concrete_locks
+
+let concrete_rho_list () : rho list =
+  RhoSet.elements !all_concrete_rho
 
 (* compute all non-linear lock names *)
 let close_nonlinear () : unit = begin

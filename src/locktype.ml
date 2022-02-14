@@ -588,6 +588,7 @@ let uniq2str u =
 
 
 let read_rho (r: rho) (p: phi) (e:effect) (u:uniq): unit =
+  update_rho_priority_value r 10;
   if !debug then ignore(E.log "%a: read access to %a\n" d_loc !currentLoc d_rho r);
   if LF.Rho.equal r unknown_rho then () else
   if !do_uniq && (safe_ignore u) then (
@@ -606,6 +607,7 @@ let read_rho (r: rho) (p: phi) (e:effect) (u:uniq): unit =
   )
 
 let write_rho (r: rho) (p: phi) (e:effect) (u:uniq): unit =
+  update_rho_priority_value r 10000;
   if !debug then ignore(E.log "%a: write access to %a\n" d_loc !currentLoc d_rho r);
   if LF.Rho.equal r unknown_rho then () else
   if !do_uniq && (safe_ignore u) then (

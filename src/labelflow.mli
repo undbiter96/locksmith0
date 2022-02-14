@@ -108,6 +108,8 @@ val get_stats: unit -> string
  *)
 val make_rho : Labelname.label_name -> bool -> rho
 val update_rho_location : rho -> Cil.location -> rho
+val update_rho_priority_value: rho -> int -> unit
+val get_rho_priority_value: rho -> int
 
 (* how many rhos have been created *)
 val count_rho : unit -> int
@@ -324,6 +326,7 @@ val inst_iter : (instantiation -> unit) -> unit
 
 val concrete_rho_iter : (rho -> unit) -> unit
 val all_concrete_rho : rhoSet ref
+val concrete_rho_list : unit -> rho list
 
 (* call to assert all non-linear locks are marked so *)
 val close_nonlinear : unit -> unit
